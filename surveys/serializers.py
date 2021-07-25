@@ -10,7 +10,7 @@ class ChoiceSerializer(serializers.ModelSerializer):
 
 
 class QuestionSerializer(serializers.ModelSerializer):
-    choices = ChoiceSerializer(many=True, read_only=True)
+    choices = ChoiceSerializer(many=True)
 
     class Meta:
         model = Question
@@ -24,12 +24,17 @@ class QuestionSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
+        choices = validated_data.pop("choices")
         question = Question.objects.create(**validated_data)
         if (
             self.data["type_of_answer"] == "One"
             or self.data["type_of_answer"] == "Many"
         ):
-            Choice.objects.create(question=question, text="Example 1")
+            if choices:
+                for choice in choices:
+                    Choice.objects.create(question=question, **choice)
+            else:
+                Choice.objects.create(question=question, text="Example 1")
         return question
 
 
