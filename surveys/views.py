@@ -1,6 +1,7 @@
 from rest_framework import viewsets
-from .models import Survey, Question
-from .serializers import SurveySerializer, QuestionSerializer
+from rest_framework.response import Response
+from .models import Survey, Question, Choice
+from .serializers import ChoiceSerializer, SurveySerializer, QuestionSerializer
 
 
 class SurveyViewSet(viewsets.ModelViewSet):
@@ -11,3 +12,8 @@ class SurveyViewSet(viewsets.ModelViewSet):
 class QuestionViewSet(viewsets.ModelViewSet):
     queryset = Question.objects.all()
     serializer_class = QuestionSerializer
+
+
+class ChoiceViewSet(viewsets.ModelViewSet):
+    queryset = Choice.objects.all()
+    serializer_class = ChoiceSerializer
