@@ -38,7 +38,5 @@ class Answer(models.Model):
     question = models.ForeignKey(
         Question, on_delete=models.CASCADE, related_name="answers"
     )
-    text = models.TextField()
-
-    def __str__(self):
-        return self.pk
+    text = models.TextField(blank=True, null=True)
+    choices = models.ManyToManyField(Choice, related_name="answer", blank=True)

@@ -1,12 +1,12 @@
 from rest_framework import serializers
 
-from .models import Question, Survey, Choice
+from .models import Question, Survey, Choice, Answer
 
 
 class ChoiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Choice
-        fields = ("text",)
+        fields = ("text", "question")
 
 
 class QuestionSerializer(serializers.ModelSerializer):
@@ -14,7 +14,7 @@ class QuestionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Question
-        fields = ("text", "type_of_answer", "survey", "choices")
+        fields = ("id", "text", "type_of_answer", "survey", "choices")
 
     def validate(self, data):
         if data["type_of_answer"] == "Text" and self.initial_data["choices"]:
@@ -44,3 +44,22 @@ class SurveySerializer(serializers.ModelSerializer):
     class Meta:
         model = Survey
         fields = ("id", "title", "description", "create_at", "questions")
+
+
+class AnswerSerializer(serializers.ModelSerializer):
+    # question = QuestionSerializer()
+    # choices = serializers.StringRelatedField(many=True)
+    choices = ChoiceSerializer(many=True, required=False)
+
+    class Meta:
+        model = Answer
+        fields = ("question", "text", "choices")
+
+    def validate(self, data):
+        type_of_answer = Question.objects.get(id=data["question"].id).type_of_answer
+        if type_of_answer == "One" or type_of_answer == "Many":
+            if "choices" not in self.initial_data:
+                raise serializers.ValidationError("choices field is required")
+        if "text" not in data:
+            raise serializers.ValidationError("text field is required")
+        return data
