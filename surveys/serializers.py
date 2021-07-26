@@ -60,3 +60,13 @@ class AnswerSerializer(serializers.ModelSerializer):
             if "text" not in data:
                 raise serializers.ValidationError("text field is required")
         return data
+
+    def create(self, validated_data):
+        type_of_answer = Question.objects.get(
+            id=validated_data["question"].id
+        ).type_of_answer
+        if type_of_answer == "One" or type_of_answer == "Many":
+            validated_data.pop("text")
+        else:
+            validated_data.pop("choices")
+        return super().create(validated_data)
