@@ -6,35 +6,40 @@ from .models import Question, Survey, Choice, Answer
 class ChoiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Choice
-        fields = ("text", "question")
+        fields = ("text",)
 
 
 class QuestionSerializer(serializers.ModelSerializer):
-    choices = ChoiceSerializer(many=True)
+    choices = ChoiceSerializer(many=True, required=False)
 
     class Meta:
         model = Question
         fields = ("id", "text", "type_of_answer", "survey", "choices")
 
     def validate(self, data):
-        if data["type_of_answer"] == "Text" and self.initial_data["choices"]:
+        if data["type_of_answer"] == "Text" and "choices" in self.initial_data:
             raise serializers.ValidationError(
-                "Wrong type of answer for choices. Try one or many"
+                "Wrong type of answer for choices. Try 'One' or 'Many'."
             )
         return data
 
     def create(self, validated_data):
-        choices = validated_data.pop("choices")
-        question = Question.objects.create(**validated_data)
-        if (
-            self.data["type_of_answer"] == "One"
-            or self.data["type_of_answer"] == "Many"
-        ):
-            if choices:
-                for choice in choices:
-                    Choice.objects.create(question=question, **choice)
-            else:
+
+        if self.data["type_of_answer"] == "Text":
+            question = Question.objects.create(**validated_data)
+            return question
+        try:
+            choices = validated_data.pop("choices")
+        except KeyError:
+            question = Question.objects.create(**validated_data)
+            Choice.objects.create(question=question, text="Example 1")
+        else:
+            question = Question.objects.create(**validated_data)
+            if len(choices) == 0:
                 Choice.objects.create(question=question, text="Example 1")
+            else:
+                for choice in choices:
+                    Choice.objects.get_or_create(question=question, **choice)
         return question
 
 
