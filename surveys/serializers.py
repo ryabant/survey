@@ -47,10 +47,6 @@ class SurveySerializer(serializers.ModelSerializer):
 
 
 class AnswerSerializer(serializers.ModelSerializer):
-    # question = QuestionSerializer()
-    # choices = serializers.StringRelatedField(many=True)
-    choices = ChoiceSerializer(many=True, required=False)
-
     class Meta:
         model = Answer
         fields = ("question", "text", "choices")
@@ -58,8 +54,9 @@ class AnswerSerializer(serializers.ModelSerializer):
     def validate(self, data):
         type_of_answer = Question.objects.get(id=data["question"].id).type_of_answer
         if type_of_answer == "One" or type_of_answer == "Many":
-            if "choices" not in self.initial_data:
+            if "choices" not in self.initial_data or len(data["choices"]) == 0:
                 raise serializers.ValidationError("choices field is required")
-        if "text" not in data:
-            raise serializers.ValidationError("text field is required")
+        else:
+            if "text" not in data:
+                raise serializers.ValidationError("text field is required")
         return data
